@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          Role           @default(EMPLOYEE)
+  department    String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  notifications Notification[]
+  visitsHosted  Visit[]        @relation("HostVisits")
+}
+
+model Visitor {
+  id             String   @id @default(cuid())
+  name           String
+  email          String
+  phone          String
+  company        String?
+  disability     Boolean  @default(false)
+  disabilityNote String?
+  createdAt      DateTime @default(now())
+  visits         Visit[]
+
+  @@index([email])
+}
+
+model Visit {
+  id               String            @id @default(cuid())
+  visitorId        String
+  hostId           String
+  purpose          String
+  visitDate        DateTime
+  startTime        DateTime
+  endTime          DateTime
+  numberOfVisitors Int               @default(1)
+  status           VisitStatus       @default(PENDING)
+  approvalToken    String            @unique @default(cuid())
+  decisionAt       DateTime?
+  decisionNote     String?
+  checkedInAt      DateTime?
+  checkedOutAt     DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  bookings         ResourceBooking[]
+  host             User              @relation("HostVisits", fields: [hostId], references: [id])
+  visitor          Visitor           @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@index([hostId, status])
+  @@index([visitDate])
+}
+
+model Resource {
+  id       String            @id @default(cuid())
+  name     String
+  type     ResourceType
+  capacity Int               @default(1)
+  location String?
+  active   Boolean           @default(true)
+  bookings ResourceBooking[]
+}
+
+model ResourceBooking {
+  id         String   @id @default(cuid())
+  resourceId String
+  visitId    String
+  startTime  DateTime
+  endTime    DateTime
+  resource   Resource @relation(fields: [resourceId], references: [id])
+  visit      Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId, startTime, endTime])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  type      String   @default("INFO")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
+
+enum Role {
+  ADMIN
+  RECEPTIONIST
+  EMPLOYEE
+}
+
+enum VisitStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ON_HOLD
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+}
+
+enum ResourceType {
+  BOARDROOM
+  PROJECTOR
+  HDMI
+  SMART_TV
+  WHITEBOARD
+  MEETING_ROOM
+}
