@@ -1,6 +1,6 @@
 # Visitor Management System
 
-Full-stack VMS for receptionists, employees, and administrators. Built for next-tech enterprises and ready to deploy on AWS or Microsoft Azure.
+Full-stack VMS for receptionists, employees, and administrators. Built for any organisation ,ready to deploy on AWS or Microsoft Azure.
 
 ## Stack
 
